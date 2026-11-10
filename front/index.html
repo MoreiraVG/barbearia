@@ -4,52 +4,84 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Barbearia - Agendamento</title>
+
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>✂ Barbearia</h1>
-    <p>Agende seu horário</p>
+    <div class="logo">
+      <i class="ph ph-scissors"></i>
+    </div>
+    <h1>Barbearia</h1>
+    <p>Agende seu horário com nossos especialistas</p>
   </header>
 
   <main>
     <section class="card">
-      <h2>Novo agendamento</h2>
+      <h2><i class="ph ph-calendar-plus"></i> Novo Agendamento</h2>
       <form id="form">
-        <label>Nome
-          <input id="nome" type="text" maxlength="60" required>
-        </label>
-
-        <label>Telefone
-          <input id="telefone" type="tel" maxlength="20" placeholder="(48) 99999-9999" required>
-        </label>
-
-        <label>Serviço
-          <select id="servico" required></select>
-        </label>
-
-        <label>Barbeiro
-          <select id="barbeiro" required></select>
-        </label>
-
-        <div class="linha">
-          <label>Data
-            <input id="data" type="date" required>
-          </label>
-          <label>Horário
-            <select id="hora" required></select>
-          </label>
+        <div class="input-group">
+          <label for="nome">Nome</label>
+          <div class="input-wrapper">
+            <i class="ph ph-user"></i>
+            <input id="nome" type="text" maxlength="60" placeholder="Seu nome completo" required>
+          </div>
         </div>
 
-        <button type="submit">Agendar</button>
-        <p id="msg" class="msg" hidden></p>
+        <div class="input-group">
+          <label for="telefone">Telefone</label>
+          <div class="input-wrapper">
+            <i class="ph ph-phone"></i>
+            <input id="telefone" type="tel" maxlength="20" placeholder="(48) 99999-9999" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="servico">Serviço</label>
+          <div class="input-wrapper">
+            <i class="ph ph-sparkle"></i>
+            <select id="servico" required></select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="barbeiro">Barbeiro</label>
+          <div class="input-wrapper">
+            <i class="ph ph-mustache"></i>
+            <select id="barbeiro" required></select>
+          </div>
+        </div>
+
+        <div class="linha">
+          <div class="input-group">
+            <label for="data">Data</label>
+            <div class="input-wrapper">
+              <i class="ph ph-calendar-blank"></i>
+              <input id="data" type="date" required>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="hora">Horário</label>
+            <div class="input-wrapper">
+              <i class="ph ph-clock"></i>
+              <select id="hora" required></select>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit">Confirmar Agendamento</button>
+        <div id="msg" class="msg" hidden></div>
       </form>
     </section>
 
     <section class="card">
-      <h2>Agendamentos</h2>
+      <h2><i class="ph ph-list-bullets"></i> Seus Agendamentos</h2>
       <ul id="lista"></ul>
-      <p id="vazio" class="vazio" hidden>Nenhum agendamento ainda.</p>
+      <div id="vazio" class="vazio" hidden>
+        <i class="ph ph-calendar-x"></i>
+        <p>Nenhum agendamento encontrado.</p>
+      </div>
     </section>
   </main>
 

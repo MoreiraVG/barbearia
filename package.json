@@ -8,9 +8,21 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.22.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marcus-Verissimo-Bastos/barbearia.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Marcus-Verissimo-Bastos/barbearia/issues"
+  },
+  "homepage": "https://github.com/Marcus-Verissimo-Bastos/barbearia#readme"
 }

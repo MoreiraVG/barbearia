@@ -1,5 +1,5 @@
 const express = require('express');
-const fs = require('fs');
+const fs = require('fs').promises; // Utilizando a API de Promises nativa do Node
 const path = require('path');
 
 const app = express();
@@ -24,20 +24,43 @@ const BARBEIROS = [
 const HORARIOS = [];
 for (let h = 9; h <= 17; h++) HORARIOS.push(String(h).padStart(2, '0') + ':00');
 
+// ---- Middlewares ----
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'front')));
 
-// ---- Funções de arquivo ----
-function lerAgendamentos() {
+// Log simples de requisições no terminal
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString('pt-BR')}] ${req.method} ${req.url}`);
+  next();
+});
+
+// ---- Funções de arquivo (Assíncronas) ----
+async function lerAgendamentos() {
   try {
-    return JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'));
-  } catch {
+    const data = await fs.readFile(ARQUIVO, 'utf8');
+    return JSON.parse(data);
+  } catch (erro) {
+    // Se o arquivo não existir ou o JSON for inválido, retorna array vazio
     return [];
   }
 }
 
-function salvarAgendamentos(lista) {
-  fs.writeFileSync(ARQUIVO, JSON.stringify(lista, null, 2));
+async function salvarAgendamentos(lista) {
+  try {
+    await fs.writeFile(ARQUIVO, JSON.stringify(lista, null, 2));
+  } catch (erro) {
+    console.error('Erro ao salvar agendamentos:', erro);
+  }
+}
+
+// Inicializa o arquivo de banco de dados, se não existir
+async function inicializarBanco() {
+  try {
+    await fs.access(ARQUIVO);
+  } catch {
+    await salvarAgendamentos([]);
+    console.log('Arquivo agendamentos.json criado com sucesso.');
+  }
 }
 
 function hoje() {
@@ -52,17 +75,22 @@ app.get('/api/servicos', (req, res) => res.json(SERVICOS));
 app.get('/api/barbeiros', (req, res) => res.json(BARBEIROS));
 
 // Horários livres de um barbeiro em uma data
-app.get('/api/horarios', (req, res) => {
+app.get('/api/horarios', async (req, res) => {
   const { data, barbeiro_id } = req.query;
-  const ocupados = lerAgendamentos()
+  const agendamentos = await lerAgendamentos();
+  
+  const ocupados = agendamentos
     .filter((a) => a.data === data && a.barbeiro_id === Number(barbeiro_id))
     .map((a) => a.hora);
+    
   res.json(HORARIOS.filter((h) => !ocupados.includes(h)));
 });
 
 // Listar agendamentos (do mais próximo ao mais distante)
-app.get('/api/agendamentos', (req, res) => {
-  const lista = lerAgendamentos()
+app.get('/api/agendamentos', async (req, res) => {
+  const agendamentos = await lerAgendamentos();
+  
+  const lista = agendamentos
     .sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora))
     .map((a) => ({
       ...a,
@@ -70,11 +98,12 @@ app.get('/api/agendamentos', (req, res) => {
       preco: SERVICOS.find((s) => s.id === a.servico_id)?.preco,
       barbeiro: BARBEIROS.find((b) => b.id === a.barbeiro_id)?.nome,
     }));
+    
   res.json(lista);
 });
 
 // Criar agendamento
-app.post('/api/agendamentos', (req, res) => {
+app.post('/api/agendamentos', async (req, res) => {
   const nome = (req.body.nome || '').trim();
   const telefone = (req.body.telefone || '').trim();
   const servico_id = Number(req.body.servico_id);
@@ -97,27 +126,36 @@ app.post('/api/agendamentos', (req, res) => {
     return res.status(400).json({ erro: 'Horário inválido.' });
   }
 
-  const lista = lerAgendamentos();
+  const lista = await lerAgendamentos();
+  
   const ocupado = lista.some(
     (a) => a.data === data && a.hora === hora && a.barbeiro_id === barbeiro_id
   );
+  
   if (ocupado) {
     return res.status(409).json({ erro: 'Esse horário já foi reservado. Escolha outro.' });
   }
 
   const novo = { id: Date.now(), nome, telefone, servico_id, barbeiro_id, data, hora };
   lista.push(novo);
-  salvarAgendamentos(lista);
+  
+  await salvarAgendamentos(lista);
   res.status(201).json(novo);
 });
 
 // Cancelar agendamento
-app.delete('/api/agendamentos/:id', (req, res) => {
-  const lista = lerAgendamentos().filter((a) => a.id !== Number(req.params.id));
-  salvarAgendamentos(lista);
+app.delete('/api/agendamentos/:id', async (req, res) => {
+  const agendamentos = await lerAgendamentos();
+  const idBuscado = Number(req.params.id);
+  
+  const listaFiltrada = agendamentos.filter((a) => a.id !== idBuscado);
+  
+  await salvarAgendamentos(listaFiltrada);
   res.status(204).end();
 });
 
-app.listen(PORT, () => {
-  console.log(`Rodando em http://localhost:${PORT}`);
+// ---- Inicialização do Servidor ----
+app.listen(PORT, async () => {
+  await inicializarBanco();
+  console.log(`💈 Servidor rodando em http://localhost:${PORT}`);
 });
